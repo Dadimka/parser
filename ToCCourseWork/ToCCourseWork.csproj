@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resource\about.html" />
+    <None Remove="Resource\analyze.html" />
+    <None Remove="Resource\code.html" />
+    <None Remove="Resource\errors.html" />
+    <None Remove="Resource\grammar.html" />
+    <None Remove="Resource\grammar_class.html" />
+    <None Remove="Resource\help.html" />
+    <None Remove="Resource\icons8-clear-50.png" />
+    <None Remove="Resource\icons8-copy-50.png" />
+    <None Remove="Resource\icons8-cut-50.png" />
+    <None Remove="Resource\icons8-new-file-50.png" />
+    <None Remove="Resource\icons8-open-file-50.png" />
+    <None Remove="Resource\icons8-paste-50.png" />
+    <None Remove="Resource\icons8-play-48.png" />
+    <None Remove="Resource\icons8-redo-48.png" />
+    <None Remove="Resource\icons8-save-50.png" />
+    <None Remove="Resource\icons8-undo-48.png" />
+    <None Remove="Resource\lit.html" />
+    <None Remove="Resource\task.html" />
+    <None Remove="Resource\test.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resource\about.html" />
+    <Resource Include="Resource\analyze.html" />
+    <Resource Include="Resource\code.html" />
+    <Resource Include="Resource\errors.html" />
+    <Resource Include="Resource\grammar.html" />
+    <Resource Include="Resource\grammar_class.html" />
+    <Resource Include="Resource\help.html" />
+    <Resource Include="Resource\icons8-clear-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-copy-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-cut-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-new-file-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-open-file-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-paste-50.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-play-48.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-redo-48.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resource\icons8-save-50.png" />
+    <Resource Include="Resource\icons8-undo-48.png" />
+    <Resource Include="Resource\lit.html" />
+    <Resource Include="Resource\task.html" />
+    <Resource Include="Resource\test.html" />
+  </ItemGroup>
+
+</Project>

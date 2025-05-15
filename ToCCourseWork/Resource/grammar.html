@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Грамматика лямбда-выражения Python</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        ol, ul {
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Грамматика λ-выражения Python G[&lt;START&gt;] (нотация Хомского)</h1>
+
+<ol>
+    <li>&lt;START&gt; → first_symb&lt;V&gt;</li>
+    <li>&lt;V&gt; → symb&lt;V&gt;</li>
+    <li>&lt;V&gt; → '=' &lt;L&gt;</li>
+    <li>&lt;L&gt; → 'lambda' &lt;ARG&gt;</li>
+    <li>&lt;A&gt; → ':' &lt;E&gt; &lt;END&gt;</li>
+    <li>&lt;ARG&gt; → first_symb &lt;ARG_N&gt;</li>
+    <li>&lt;ARG_N&gt; → symb &lt;ARG_N&gt;</li>
+    <li>&lt;ARG_N&gt; → ',' &lt;ARG&gt;</li>
+    <li>&lt;ARG_N&gt; → ':' &lt;E&gt; &lt;END&gt;</li>
+    <li>&lt;E&gt; → &lt;T&gt; &lt;A&gt;</li>
+    <li>&lt;A&gt; → ε | '+' &lt;T&gt; &lt;A&gt; | '-' &lt;T&gt; &lt;A&gt;</li>
+    <li>&lt;T&gt; → &lt;O&gt; &lt;B&gt;</li>
+    <li>&lt;B&gt; → ε | '*' &lt;O&gt; &lt;B&gt; | '/' &lt;O&gt; &lt;B&gt;</li>
+    <li>&lt;O&gt; → &lt;I&gt; | &lt;N&gt; | '(' &lt;E&gt; ')'</li>
+    <li>&lt;N&gt; → digit | digit&lt;N&gt;</li>
+    <li>&lt;I&gt; → first_symb &lt;I_R&gt;</li>
+    <li>&lt;I_R&gt; → symb &lt;I_R&gt; | symb</li>
+    <li>&lt;END&gt; → ';'</li>
+</ol>
+
+<h2>Термы и нетермы</h2>
+<ul>
+    <li><strong>Z</strong> = &lt;START&gt;</li>
+    <li><strong>VT</strong> = { a … z, A … Z, '_', 0 … 9, first_symb, symb, digit, '=', ':', ';', ',', '+', '-', '*', '/', '(', ')' }</li>
+    <li><strong>VN</strong> = { &lt;V&gt;, &lt;L&gt;, &lt;ARG&gt;, &lt;ARG_N&gt;, &lt;E&gt;, &lt;T&gt;, &lt;O&gt;, &lt;N&gt;, &lt;A&gt;, &lt;B&gt;, &lt;I&gt;, &lt;I_R&gt;, &lt;END&gt; }</li>
+</ul>
+
+<h2>Примечания по токенам</h2>
+<ul>
+    <li><em>first_symb</em> → a … z | A … Z</li>
+    <li><em>symb</em>       → a … z | A … Z | '_' | 0 … 9</li>
+    <li><em>digit</em>      → 0 … 9</li>
+</ul>
+
+</body>
+</html>

@@ -1,0 +1,224 @@
+﻿<Window x:Class="ToCCourseWork.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ToCCourseWork"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        Title="Compiler" Height="450" Width="470" WindowStartupLocation="CenterScreen" Background="#FF95C4FF">
+    <Window.Resources>
+        <!-- Конвертер для IsEnabled -->
+        <local:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
+
+        <!-- Стиль для изображения -->
+        <Style x:Key="GrayableImageStyle" TargetType="Image">
+            <Setter Property="Opacity" Value="1"/>
+            <!-- Обычная прозрачность -->
+            <Style.Triggers>
+                <!-- Когда родительский элемент (кнопка) отключен -->
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=IsEnabled}" Value="False">
+                    <Setter Property="Opacity" Value="0.3"/>
+                    <!-- Полупрозрачность -->
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <!-- Эффект для обесцвечивания -->
+                            <DropShadowEffect Color="Gray" ShadowDepth="0" Opacity="1"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+
+    <Grid>
+        <!-- Панель заголовка с кнопками -->
+        <Border Background="#FF1E5FB0" Height="30" VerticalAlignment="Top" MouseDown="MoveWindow">
+            <Grid>
+                <!-- Кнопка Развернуть/Восстановить -->
+                <Button Content="⬜"
+                    Width="30" Height="30"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,0,30,0"
+                    Background="#FF1E5FB0"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    Click="ToggleMaximize"/>
+
+                <!-- Кнопка Закрыть -->
+                <Button Content="X"
+                    Width="30" Height="30"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="Red"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    Click="ExitApp"/>
+            </Grid>
+        </Border>
+
+        <DockPanel Margin="0,30,0,0">
+            <!-- Меню -->
+            <Menu DockPanel.Dock="Top" Background="#FF95C4FF">
+                <MenuItem Header="Файл">
+                    <MenuItem Header="Создать" Click="NewFile"/>
+                    <MenuItem Header="Открыть" Click="OpenFile"/>
+                    <MenuItem Header="Сохранить" Click="SaveFile"/>
+                    <MenuItem Header="Сохранить как" Click="SaveFileAs"/>
+                    <Separator/>
+                    <MenuItem Header="Выход" Click="ExitApp"/>
+                </MenuItem>
+                <MenuItem Header="Правка">
+                    <MenuItem Header="Отменить" Click="UndoText"/>
+                    <MenuItem Header="Повторить" Click="RedoText"/>
+                    <MenuItem Header="Вырезать" Click="CutText"/>
+                    <MenuItem Header="Копировать" Click="CopyText"/>
+                    <MenuItem Header="Вставить" Click="PasteText"/>
+                    <MenuItem Header="Удалить" Click="DeleteText"/>
+                    <MenuItem Header="Выделить все" Click="SelectAllText"/>
+                </MenuItem>
+                <MenuItem Header="Текст">
+                    <MenuItem Header="Постановка задачи" Click="OpenTask"/>
+                    <MenuItem Header="Грамматика" Click="OpenGrammar"/>
+                    <MenuItem Header="Классификация грамматики" Click="OpenGrammarClass"/>
+                    <MenuItem Header="Метод анализа" Click="OpenAnalyze"/>
+                    <MenuItem Header="Диагностика и нейтрализация ошибок" Click="OpenErrors"/>
+                    <MenuItem Header="Тестовый пример" Click="OpenTest"/>
+                    <MenuItem Header="Список литературы" Click="OpenLit"/>
+                    <MenuItem Header="Исходный код программы" Click="OpenCode"/>
+                </MenuItem>
+                <MenuItem Header="Пуск" Click="MenuItem_Click">
+                </MenuItem>
+                <MenuItem Header="Справка">
+                    <MenuItem Header="Вызов справки" Click="OpenHelp"/>
+                    <MenuItem Header="О программе" Click="OpenAbout"/>
+                </MenuItem>
+            </Menu>
+
+            <!-- Панель инструментов -->
+            <ToolBar DockPanel.Dock="Top" Background="#FF95C4FF" Height="31">
+                <Button Click="RunSyntaxCheck" ToolTip="Пуск">
+                    <Image Width="20" Height="20" Source="Resource/icons8-play-48.png"/>
+                </Button>
+                <Separator/>
+                <Button Click="NewFile" ToolTip="Создать">
+                    <Image Source="Resource/icons8-new-file-50.png" Width="20" Height="20"/>
+                </Button>
+                <Button Click="OpenFile" ToolTip="Открыть">
+                    <Image Source="Resource/icons8-open-file-50.png" Width="20" Height="20"/>
+                </Button>
+                <Button Click="SaveFile" ToolTip="Сохранить">
+                    <Image Source="Resource/icons8-save-50.png" Width="20" Height="20"/>
+                </Button>
+                <Separator/>
+                <Button Click="UndoText" ToolTip="Отменить" IsEnabled="{Binding UndoStack.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+                    <Image Source="Resource/icons8-undo-48.png" Width="20" Height="20" Style="{StaticResource GrayableImageStyle}"/>
+                </Button>
+                <Button Click="RedoText" ToolTip="Повторить" IsEnabled="{Binding RedoStack.Count, Converter={StaticResource GreaterThanZeroConverter}}">
+                    <Image Source="Resource/icons8-redo-48.png" Width="20" Height="20" Style="{StaticResource GrayableImageStyle}"/>
+                </Button>
+                <Separator/>
+                <Button Click="CutText" ToolTip="Вырезать">
+                    <Image Source="Resource/icons8-cut-50.png" Width="20" Height="20"/>
+                </Button>
+                <Button Click="CopyText" ToolTip="Копировать">
+                    <Image Source="Resource/icons8-copy-50.png" Width="20" Height="20"/>
+                </Button>
+                <Button Click="PasteText" ToolTip="Вставить">
+                    <Image Source="Resource/icons8-paste-50.png" Width="20" Height="20"/>
+                </Button>
+                <Separator/>
+                <Button Click="ClearAll" ToolTip="Очистить все">
+                    <Image Source="Resource/icons8-clear-50.png" Width="20" Height="20"/>
+                </Button>
+            </ToolBar>
+
+            <!-- Основной контент -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"/>
+                    <!-- Редактор кода -->
+                    <RowDefinition Height="5"/>
+                    <!-- Разделитель -->
+                    <RowDefinition Height="*" MinHeight="100"/>
+                    <!-- Панель ошибок -->
+                </Grid.RowDefinitions>
+
+
+                <!-- Редактор кода с номерами строк -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Номера строк -->
+                    <ScrollViewer Grid.Column="0" 
+                    Name="LineNumbersScroll" 
+                    VerticalScrollBarVisibility="Hidden"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalAlignment="Stretch"
+                    Height="{Binding ActualHeight, ElementName=TextEditorScroll, Mode=OneWay}">
+                        <TextBox Name="LineNumbers" 
+                    Width="40" 
+                    Margin="5,0,0,5"
+                    Background="#FFBEDBFF" 
+                    TextAlignment="Right"
+                    IsReadOnly="True"
+                    BorderBrush="{x:Null}"
+                    Focusable="False"/>
+                    </ScrollViewer>
+
+                    <!-- Текстовый редактор -->
+                    <ScrollViewer Grid.Column="1" 
+                    Name="TextEditorScroll"
+                    HorizontalScrollBarVisibility="Auto" 
+                    VerticalScrollBarVisibility="Auto"
+                    ScrollChanged="TextEditorScroll_ScrollChanged"
+                    SizeChanged="TextEditorScroll_SizeChanged"
+                    VerticalAlignment="Stretch">
+                        <TextBox Name="TextEditor" 
+                        AcceptsReturn="True" 
+                        AcceptsTab="True"
+                        Background="#FFBEDBFF"
+                        TextWrapping="NoWrap"
+                        TextChanged="TextEditor_TextChanged" 
+                        Margin="0,0,5,5"/>
+                    </ScrollViewer>
+                </Grid>
+
+                <GridSplitter Grid.Row="1" 
+                            Height="5" 
+                            HorizontalAlignment="Stretch" 
+                            VerticalAlignment="Center" 
+                            Background="#FF1E5FB0"
+                            ResizeBehavior="PreviousAndNext"/>
+
+                <!-- Панель ошибок -->
+                <Border Grid.Row="2"
+                      BorderBrush="Black" 
+                      BorderThickness="0,1,0,0"
+                      Margin="5">
+                    <TabControl Background="#FFBEDBFF">
+                        <TabItem Header="Ошибки" Background="#FF95C4FF">
+                            <TextBox Name="ErrorOutput" 
+                                IsReadOnly="True" 
+                                TextWrapping="Wrap" 
+                                Background="#FFBEDBFF"
+                                VerticalScrollBarVisibility="Auto"/>
+                        </TabItem>
+                        <TabItem Header="Лексемы" Background="#FF95C4FF">
+                            <TextBox Name="TokenOutput" 
+                                IsReadOnly="True" 
+                                TextWrapping="Wrap" 
+                                Background="#FFBEDBFF"
+                                VerticalScrollBarVisibility="Auto"/>
+                        </TabItem>
+                    </TabControl>
+                </Border>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>
