@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
+using System.Windows.Controls;
 using ToCCourseWork.Entity;
 
 namespace ToCCourseWork.Service
@@ -14,22 +16,54 @@ namespace ToCCourseWork.Service
             this.errors = errors;
         }
 
-        public List<Error> Parse()
-        {
 
-            List<Error> errors = [.. this.errors];
-            foreach (List<Token> line in SplitTokensIntoLines(tokens))
+        public List<string> Parse(TextBox textBox)
+        {
+            List<string> results = new List<string>();
+            string text = textBox.Text;
+
+            Regex identifierRegex = new Regex(@"\b[$_\w][\w]*\b"); // Более упрощенный вариант для Python-like
+            
+            MatchCollection identifierMatches = identifierRegex.Matches(text);
+            foreach (Match match in identifierMatches)
             {
-                RecursiveParser recursiveParser = new RecursiveParser(line);
-                errors.AddRange(recursiveParser.Parse());
+                results.Add($"Найдено совпадение Идентификатор - {match.Value} - {match.Index}");
             }
 
+            // 2. Многострочные комментарии (Python)
+            Regex multilineCommentRegex = new Regex("\"\"\"[\\s\\S]*?\"\"\"");
+            MatchCollection multilineCommentMatches = multilineCommentRegex.Matches(text);
+            foreach (Match match in multilineCommentMatches)
+            {
+                results.Add($"Найдено совпадение Многострочный комментарий - {match.Value} - {match.Index}");
+            }
+            //  3. VIN (Vehicle Identification Number)
+            Regex VINRegex = new Regex(@"\b[A-HJ-NPR-Z0-9]{17}\b");  
+            MatchCollection vinMatches = VINRegex.Matches(text);
+            foreach (Match match in vinMatches)
+            {
+                results.Add($"Найдено совпадение VIN - {match.Value} - {match.Index}");
+            }
 
-            return errors
-                .OrderBy(e => e.Line)
-                .ThenBy(e => e.Column)
-                .ToList();
+            return results;
         }
+        //Старый parse
+        //public List<Error> Parse()
+        //{
+
+        //    List<Error> errors = [.. this.errors];
+        //    foreach (List<Token> line in SplitTokensIntoLines(tokens))
+        //    {
+        //        RecursiveParser recursiveParser = new RecursiveParser(line);
+        //        errors.AddRange(recursiveParser.Parse());
+        //    }
+
+
+        //    return errors
+        //        .OrderBy(e => e.Line)
+        //        .ThenBy(e => e.Column)
+        //        .ToList();
+        //}
 
 
         private List<List<Token>> SplitTokensIntoLines(List<Token> tokens)
