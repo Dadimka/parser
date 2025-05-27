@@ -105,6 +105,27 @@
 ![image](https://github.com/user-attachments/assets/15dd2f12-67a0-4ba6-bff0-7f9a54f8e5de)
 ![image](https://github.com/user-attachments/assets/5e9baa5d-81cd-40f6-8d3f-4a42cf0cabd2)
 
+# Лабораторная работа 6
+## Задачи
+1. Построить РВ для поиска идентификатора, который может начинаться только с буквы a-zA-Z, знака доллара $ или подчеркивания _, оставшаяся часть символов идентификатора представляют собой только буквы a-zA-Z.
+2. Построить РВ, описывающее многострочные комментарии (язык Python).
+3. Построить РВ, описывающее регистрационный знак транспортного средства (Vehicle Identification Number).
+## Регулярные выражения
+Задача 1 <br>
+@"\b[$_\w][\w]*\b"
+
+Задача 2 <br>
+"\"\"\"[\\s\\S]*?\"\"\""
+
+Задача 3 <br>
+@"\b[A-HJ-NPR-Z0-9]{17}\b"
+
+## Тестовые примеры 
+![image](https://github.com/user-attachments/assets/c2e234d5-43d1-4d57-bdad-ffe2afaef772) <br>
+![image](https://github.com/user-attachments/assets/322d934c-81e7-4359-a6f9-7ab62e580d16) <br>
+![image](https://github.com/user-attachments/assets/b189ab8f-6bad-4262-a322-a7f07863fd9b)
+
+
 
   
 
