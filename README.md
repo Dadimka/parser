@@ -202,7 +202,7 @@ dot -Tpng .square.dot -o cfg_square.png <br>
 xdg-open cfg_main.png <br>
 <img width="660" alt="Снимок экрана 2025-06-09 в 04 17 05" src="https://github.com/user-attachments/assets/7de54f16-d389-4325-b934-80183ff78914" /> <br>
 
-xdg-open cfg_square.png
+xdg-open cfg_square.png <br>
 <img width="287" alt="Снимок экрана 2025-06-09 в 04 17 16" src="https://github.com/user-attachments/assets/5d077e5c-7186-4727-81dc-ff145df4f67b" /> <br>
 
 Стоит отметить, что в LLVM каждый граф потока управления (CFG) строится на уровне функции, поскольку структура управления всегда локальна для тела функции. Для получения полного представления о программе, нужно построить CFG для всех функций и анализировать их совокупность. Автоматическое объединение всех CFG в один граф не предусмотрено в LLVM по умолчанию.
