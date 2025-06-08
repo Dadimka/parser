@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using System.Text.RegularExpressions;
-using System.Windows.Controls;
 using ToCCourseWork.Entity;
 
 namespace ToCCourseWork.Service
@@ -9,61 +7,32 @@ namespace ToCCourseWork.Service
     {
         private readonly List<Token> tokens;
         private readonly List<Error> errors;
+        public List<string> ExecutionStack { get; set; }
 
         public Parser(List<Token> tokens, List<Error> errors)
         {
             this.tokens = tokens;
             this.errors = errors;
+            ExecutionStack = new List<string>();
         }
 
-
-        public List<string> Parse(TextBox textBox)
+        public List<Error> Parse()
         {
-            List<string> results = new List<string>();
-            string text = textBox.Text;
 
-            Regex identifierRegex = new Regex(@"\b[$_\w][\w]*\b"); // Более упрощенный вариант для Python-like
-            
-            MatchCollection identifierMatches = identifierRegex.Matches(text);
-            foreach (Match match in identifierMatches)
+            List<Error> errors = [.. this.errors];
+            foreach (List<Token> line in SplitTokensIntoLines(tokens))
             {
-                results.Add($"Найдено совпадение Идентификатор - {match.Value} - {match.Index}");
+                RecursiveParser recursiveParser = new RecursiveParser(line);
+                errors.AddRange(recursiveParser.Parse());
+                ExecutionStack.AddRange(recursiveParser.ExecutionStack);
             }
 
-            // 2. Многострочные комментарии (Python)
-            Regex multilineCommentRegex = new Regex("\"\"\"[\\s\\S]*?\"\"\"");
-            MatchCollection multilineCommentMatches = multilineCommentRegex.Matches(text);
-            foreach (Match match in multilineCommentMatches)
-            {
-                results.Add($"Найдено совпадение Многострочный комментарий - {match.Value} - {match.Index}");
-            }
-            //  3. VIN (Vehicle Identification Number)
-            Regex VINRegex = new Regex(@"\b[A-HJ-NPR-Z0-9]{17}\b");  
-            MatchCollection vinMatches = VINRegex.Matches(text);
-            foreach (Match match in vinMatches)
-            {
-                results.Add($"Найдено совпадение VIN - {match.Value} - {match.Index}");
-            }
 
-            return results;
+            return errors
+                .OrderBy(e => e.Line)
+                .ThenBy(e => e.Column)
+                .ToList();
         }
-        //Старый parse
-        //public List<Error> Parse()
-        //{
-
-        //    List<Error> errors = [.. this.errors];
-        //    foreach (List<Token> line in SplitTokensIntoLines(tokens))
-        //    {
-        //        RecursiveParser recursiveParser = new RecursiveParser(line);
-        //        errors.AddRange(recursiveParser.Parse());
-        //    }
-
-
-        //    return errors
-        //        .OrderBy(e => e.Line)
-        //        .ThenBy(e => e.Column)
-        //        .ToList();
-        //}
 
 
         private List<List<Token>> SplitTokensIntoLines(List<Token> tokens)
@@ -75,7 +44,7 @@ namespace ToCCourseWork.Service
             {
                 currentLine.Add(token);
 
-                if (token.Type == TokenType.END)
+                if (token.Type == TokenType.WHITESPACE)
                 {
                     lines.Add(currentLine);
                     currentLine = new List<Token>();
@@ -96,169 +65,24 @@ namespace ToCCourseWork.Service
     {
         private readonly List<Token> tokens;
         private int OpenBracket = 0;
+        public List<string> ExecutionStack { get; set; }
 
         public RecursiveParser(List<Token> tokens)
         {
             this.tokens = tokens;
+            ExecutionStack = new List<string>();
         }
 
         public List<Error> Parse()
         {
             int currentPosition = 0;
             List<Error> errors = new List<Error>();
-            return Var(currentPosition, errors);
-        }
-
-        private List<Error> Var(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return errors;
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if (!Match(currentPosition, TokenType.IDENTIFIER, errors))
-            {
-                return GetMinErrorList(
-                        Equals(currentPosition, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.PUSH, errors)),
-                        Equals(currentPosition + 1, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.REPLACE, errors)),
-                        Var(currentPosition + 1, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.DELETE, errors))
-                );
-            }
-
-            return Equals(currentPosition + 1, errors);
-        }
-
-        private List<Error> Equals(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return errors;
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if (!Match(currentPosition, TokenType.EQUAL, errors))
-            {
-                return GetMinErrorList(
-                        Lambda(currentPosition, CreateErrorList(currentPosition, TokenType.EQUAL, ErrorType.PUSH, errors)),
-                        Lambda(currentPosition + 1, CreateErrorList(currentPosition, TokenType.EQUAL, ErrorType.REPLACE, errors)),
-                        Equals(currentPosition + 1, CreateErrorList(currentPosition, TokenType.EQUAL, ErrorType.DELETE, errors))
-                );
-            }
-            return Lambda(currentPosition + 1, errors);
-        }
-
-        private List<Error> Lambda(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return errors;
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if (!Match(currentPosition, TokenType.LAMBDA, errors))
-            {
-                return GetMinErrorList(
-                        Argument(currentPosition, CreateErrorList(currentPosition, TokenType.LAMBDA, ErrorType.PUSH, errors)),
-                        Argument(currentPosition + 1, CreateErrorList(currentPosition, TokenType.LAMBDA, ErrorType.REPLACE, errors)),
-                        Lambda(currentPosition + 1, CreateErrorList(currentPosition, TokenType.LAMBDA, ErrorType.DELETE, errors))
-                );
-            }
-            return Argument(currentPosition + 1, errors);
-        }
-
-        private List<Error> Argument(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return errors;
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if(Match(currentPosition, TokenType.COLON, errors)) {
-                (errors, currentPosition) = Expression(currentPosition + 1, errors);
-                return End(currentPosition, errors);
-
-            } else 
-            {
-                return ArgumentName(currentPosition, errors);
-            }
-            
-        }
-
-        private List<Error> ArgumentName(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return errors;
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if (!Match(currentPosition, TokenType.IDENTIFIER, errors))
-            {
-                return GetMinErrorList(
-                        CommaOrColon(currentPosition + 1, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.REPLACE, errors)).Item1,
-                        ArgumentName(currentPosition + 1, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.DELETE, errors)),
-                        CommaOrColon(currentPosition, CreateErrorList(currentPosition, TokenType.IDENTIFIER, ErrorType.PUSH, errors)).Item1
-                );
-            }
-            return CommaOrColon(currentPosition + 1, errors).Item1;
-        }
-
-        private (List<Error>, int) CommaOrColon(int currentPosition, List<Error> errors)
-        {
-            if (IsAtEnd(currentPosition))
-            {
-                return (errors, currentPosition);
-            }
-
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                currentPosition++;
-
-            if (Match(currentPosition, TokenType.COMMA, errors))
-            {
-                return (Argument(currentPosition + 1, errors), currentPosition);
-            }
-            else if (Match(currentPosition, TokenType.COLON,errors))
-            {
-                (errors, currentPosition) = Expression(currentPosition + 1, errors);
-                return (End(currentPosition, errors), currentPosition);
-            }
-
-            else if (IsContainToken(TokenType.COLON, currentPosition) )
-            {
-                if(errors.Count > 30) return (errors, currentPosition);
-                errors = GetMinErrorList(
-                        Argument(currentPosition, CreateErrorList(currentPosition, TokenType.COMMA, ErrorType.PUSH, errors)),
-                        Argument(currentPosition + 1, CreateErrorList(currentPosition, TokenType.COMMA, ErrorType.REPLACE, errors)),
-                        CommaOrColon(currentPosition + 1, CreateErrorList(currentPosition, TokenType.COMMA, ErrorType.DELETE, errors)).Item1
-                );
-                return (errors, currentPosition);
-            }
-
-            else
-            {
-                (errors, currentPosition) = GetMinErrorList(
-                        Expression(currentPosition, CreateErrorList(currentPosition, TokenType.COLON, ErrorType.PUSH, errors)),
-                        Expression(currentPosition + 1, CreateErrorList(currentPosition, TokenType.COLON, ErrorType.REPLACE, errors)),
-                        CommaOrColon(currentPosition + 1, CreateErrorList(currentPosition, TokenType.COLON, ErrorType.DELETE, errors))
-                );
-                return (End(currentPosition, errors), currentPosition);
-            }
+            return Expression(currentPosition, errors).Item1;
         }
 
         private (List<Error>, int) Expression(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("E");
             if (IsAtEnd(currentPosition))
             {
                 return (errors, currentPosition);
@@ -269,11 +93,17 @@ namespace ToCCourseWork.Service
                 return Expression(currentPosition + 1, errors);
 
             (errors, currentPosition) = T(currentPosition, errors);
-            return A(currentPosition, errors);
+            (errors, currentPosition) = A(currentPosition, errors);
+            if(OpenBracket == 0 && Match(currentPosition, TokenType.CLOSE_BRACKET, errors))
+            {
+                AddError(currentPosition, TokenType.CLOSE_BRACKET, ErrorType.DELETE, errors);
+            }
+            return (errors, currentPosition);
         }
 
         private (List<Error>, int) T(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("T");
             if (IsAtEnd(currentPosition))
             {
                 return (errors, currentPosition);
@@ -284,6 +114,7 @@ namespace ToCCourseWork.Service
 
         private (List<Error>, int) A(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("A");
             if (IsAtEnd(currentPosition))
             {
                 return (errors, currentPosition);
@@ -319,6 +150,7 @@ namespace ToCCourseWork.Service
 
         private (List<Error>, int) O(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("O");
             if (IsAtEnd(currentPosition))
             {
                 return (errors, currentPosition);
@@ -354,6 +186,7 @@ namespace ToCCourseWork.Service
 
         private (List<Error>, int) B(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("B");
             if (IsAtEnd(currentPosition))
             {
                 return (errors, currentPosition);
@@ -390,6 +223,7 @@ namespace ToCCourseWork.Service
 
         private (List<Error>, int) CloseBracket(int currentPosition, List<Error> errors)
         {
+            ExecutionStack.Add("CLOSE_BRACKET");
             if (IsAtEnd(currentPosition))
             {
                 AddError(currentPosition - 1, TokenType.CLOSE_BRACKET, ErrorType.PUSH, errors);
@@ -405,28 +239,6 @@ namespace ToCCourseWork.Service
                 AddError(currentPosition, TokenType.CLOSE_BRACKET, ErrorType.PUSH, errors);
             }
             return (errors, currentPosition + 1);
-        }
-
-
-        private List<Error> End(int currentPosition, List<Error> errors)
-        {
-
-            if (IsAtEnd(currentPosition))
-            {
-                if (!Match(currentPosition - 1, TokenType.END, errors))
-                {
-                    AddError(currentPosition - 1, TokenType.END, ErrorType.PUSH, errors);
-                }
-                return errors;
-            }
-            if (Match(currentPosition, TokenType.WHITESPACE, errors))
-                return End(currentPosition + 1, errors);
-            if (!Match(currentPosition, TokenType.END, errors))
-            {
-                AddError(currentPosition, TokenType.END, ErrorType.DELETE, errors);
-                End(currentPosition + 1, errors);
-            }
-            return errors;
         }
 
 
@@ -526,12 +338,6 @@ namespace ToCCourseWork.Service
         {
             var actualToken = GetToken(currentPosition);
 
-            if((actualToken.Type == TokenType.OPEN_BRACKET || actualToken.Type == TokenType.CLOSE_BRACKET || expectedTokenType == TokenType.CLOSE_BRACKET) 
-                && (expectedTokenType != TokenType.END || expectedTokenType == TokenType.END && errorType == ErrorType.DELETE))
-            {
-                return "Нужно соблюсти баланс скобок";
-            }
-
             return errorType switch
             {
                 ErrorType.DELETE or ErrorType.DELETE_END =>
@@ -551,17 +357,12 @@ namespace ToCCourseWork.Service
         {
             return type switch
             {
-                TokenType.LAMBDA => "lambda",
                 TokenType.NUMBER => "число",
                 TokenType.IDENTIFIER => "идентификатор",
                 TokenType.OPEN_BRACKET => "(",
                 TokenType.CLOSE_BRACKET => ")",
-                TokenType.EQUAL => "=",
                 TokenType.PLUS_OPERATION => "+ или -",
                 TokenType.MULTIPLICATION_OPERATION => "* или /",
-                TokenType.COLON => ":",
-                TokenType.COMMA => ",",
-                TokenType.END => ";",
                 TokenType.INVALID => "невалидный токен",
                 TokenType.WHITESPACE => "пробел",
                 _ => type.ToString()
